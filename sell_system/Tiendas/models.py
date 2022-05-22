@@ -4,6 +4,8 @@ from datetime import *
 
 
 
+
+
 class Ciudad(models.Model):
     nombre = models.CharField(max_length=100)
 
@@ -19,6 +21,7 @@ class Moneda(models.Model):
         return self.codigo + ' - ' + self.nombre
 
 
+
 class Tienda(models.Model):
     nombre = models.CharField(max_length=200)
     ciudad = models.ForeignKey(Ciudad, on_delete=models.CASCADE)
@@ -31,3 +34,13 @@ class Tienda(models.Model):
 
     def __str__(self):
         return self.nombre
+
+
+
+class Cierre_Caja(models.Model):
+    fecha_cierre = models.DateField(auto_now=False)
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    tienda = models.ForeignKey(Tienda, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.fecha_cierre)

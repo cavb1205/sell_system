@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     'Tiendas',
     'Clientes',
     'Trabajadores',
+    'Aportes',
     'Gastos',
+    'Utilidades',
+    'Reservas',
 ]
 
 MIDDLEWARE = [

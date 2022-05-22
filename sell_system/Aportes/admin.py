@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from Aportes.models import Aporte
+from django.contrib import admin
 
-# Register your models here.
+from .models import Aporte
+
+
 admin.site.register(Aporte)
