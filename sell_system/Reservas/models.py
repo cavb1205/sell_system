@@ -12,8 +12,8 @@ class Reserva(models.Model):
     valor_solicitado = models.DecimalField(max_digits=10, decimal_places=2)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     tienda = models.ForeignKey(Tienda, on_delete=models.CASCADE)
-    estado_reserva = models.BooleanField(default=False)
+    estado_reserva = models.BooleanField(default=True)
 
     def __str__(self):
-        return str(self.fecha_entrega)
+        return str(self.fecha_entrega) + ' ' + self.cliente.nombres + '' + ' Estado: ' + str(self.estado_reserva)
 

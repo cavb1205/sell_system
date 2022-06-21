@@ -39,3 +39,25 @@ def post_cliente(request):
             return Response(cliente_serializer.data, status=status.HTTP_200_OK)
         return Response(cliente_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+@api_view(['PUT'])
+def put_cliente(request, pk):
+    cliente = Cliente.objects.filter(id=pk).first()
+    if cliente:
+        cliente_serializer = ClienteSerializer(cliente, data=request.data)
+        if cliente_serializer.is_valid():
+            cliente_serializer.save()
+            return Response(cliente_serializer.data,status=status.HTTP_200_OK)
+        return Response(cliente_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'message':'No existe el cliente'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+@api_view(['DELETE'])
+def delete_cliente(request, pk):
+    cliente = Cliente.objects.filter(id=pk).first()
+    if cliente:
+        cliente.delete()
+        return Response({'message':'Cliente eliminado correctamente'},status=status.HTTP_200_OK)
+    return Response({'message':'Cliente no existe!'}, status=status.HTTP_400_BAD_REQUEST)

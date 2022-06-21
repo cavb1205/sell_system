@@ -1,54 +1,95 @@
-from django.shortcuts import render
+import collections
+from typing import OrderedDict
+
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from .models import *
-from .serializers import AporteSerializer
+from .serializers import AporteSerializer, AporteUpdateSerializer
 
 
-@api_view(['GET','POST'])
-def get_aportes(request):
-    '''get and post, aportes'''
-
-    if request.method == 'GET':
-        aportes = Aporte.objects.all()
-        serialize = AporteSerializer(aportes, many=True)
-        return Response(serialize.data, status=status.HTTP_200_OK)
-
-    elif request.method == 'POST':
-        serialize = AporteSerializer(data = request.data)
-        if serialize.is_valid():
-            serialize.save()
-            return Response(serialize.data, status=status.HTTP_201_CREATED)
-        return Response(serialize.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET','PUT','DELETE'])
-def get_aporte(request, pk):
-    '''get a specific aporte'''
-
-    try:
-        aporte = Aporte.objects.get(id=pk)
-    except Aporte.DoesNotExist:
-        return Response({'message': 'Aporte no existe'}, status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serialize = AporteSerializer(aporte, many=False)
-        return Response(serialize.data,status=status.HTTP_200_OK)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_aportes(request):
+    '''obtenemos todas los aportes'''
+    print('ingresamos a list aportes')
+    user=request.user
+    print(user.perfil.tienda)
+    aportes = Aporte.objects.filter(tienda=user.perfil.tienda)
+    #aportes = aportes = Aporte.objects.all()
+    if aportes:
+        print(aportes)
+        aporte_serializer = AporteSerializer(aportes, many=True)
+        return Response(aporte_serializer.data, status=status.HTTP_200_OK)
+    return Response({'message':'No se han creado aportes'}, status=status.HTTP_200_OK)
     
-    elif request.method == 'PUT':
-        serialize = AporteSerializer(aporte, data = request.data)
-        if serialize.is_valid():
-            serialize.save()
-            return Response(serialize.data,status=status.HTTP_200_OK)
-        return Response(serialize.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
-    elif request.method == 'DELETE':
-        aporte.delete()
-        return Response({'message':'Aporte eliminado correctamente'},status=status.HTTP_200_OK)
+@api_view(['GET'])
+def get_aporte(request, pk):
+    aporte = Aporte.objects.filter(id=pk).first()
+    if aporte:
+        aporte_serializer = AporteSerializer(aporte, many=False)
+        return Response(aporte_serializer.data)
+    else:
+        return Response({'message':'No se encontro el aporte'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+def put_aporte(request, pk):
+    aporte_inicial = Aporte.objects.filter(id=pk).first()
+    
+    tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
+    if aporte_inicial:
+        aporte_serializer = AporteUpdateSerializer(aporte_inicial, data=request.data)
+        if aporte_serializer.is_valid():
+            print('es valido ')
+            new_aporte = aporte_serializer.validated_data['valor']
+            if (aporte_inicial.valor <= new_aporte):
+                print('ingresa al primer if')
+                print(new_aporte)
+                print(aporte_inicial.valor)
+                tienda.caja_inicial = tienda.caja_inicial + (new_aporte - aporte_inicial.valor)
+                print('tienda.caja')
+                print(tienda.caja_inicial)
+            elif (aporte_inicial.valor >= new_aporte):
+                print('ingresa al else')
+                tienda.caja_inicial = tienda.caja_inicial - (aporte_inicial.valor-new_aporte)
+            
+            aporte_serializer.save()
+            tienda.save()
+
+            return Response(aporte_serializer.data,status=status.HTTP_200_OK)
+        return Response(aporte_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'message':'No se encontró el aporte'}, status=status.HTTP_400_BAD_REQUEST)
         
 
+@api_view(['POST'])
+def post_aporte(request):
+    '''creamos un aporte'''
+    if request.method == 'POST':
+        tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
+        new_data = request.data
+        new_data['tienda']=tienda.id
+        
+        aporte_serializer = AporteSerializer(data = new_data)
+        if aporte_serializer.is_valid():
+            aporte_serializer.save()        
+            tienda.caja_inicial = tienda.caja_inicial + aporte_serializer.validated_data['valor']
+            tienda.save()
+            return Response(aporte_serializer.data, status=status.HTTP_200_OK)
+        return Response(aporte_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
-
-
+@api_view(['DELETE'])
+def delete_aporte(request, pk):
+    aporte = Aporte.objects.filter(id=pk).first()
+    tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
+    if aporte:
+        aporte.delete()
+        tienda.caja_inicial = tienda.caja_inicial - aporte.valor
+        tienda.save()
+        return Response({'message':'Aporte eliminado correctamente'},status=status.HTTP_200_OK)
+    return Response({'message':'No se encontró el aporte'}, status=status.HTTP_400_BAD_REQUEST)

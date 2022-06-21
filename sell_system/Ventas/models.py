@@ -19,7 +19,6 @@ class Venta(models.Model):
         ('Diario','Diario'),
         ('Semanal','Semanal'),
         ('Mensual','Mensual'),
-        ('Anual','Anual'),
     ]
 
 

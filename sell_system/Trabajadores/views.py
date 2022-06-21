@@ -1,13 +1,48 @@
+from django.contrib.auth import authenticate
+
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from django.contrib.auth.models import User
 from Trabajadores.models import Perfil
 
 from Trabajadores.serializers import UserCreateSerializer, PerfilSerializer, UserSerializer, UserUpdateSerializer
+from Trabajadores.serializers import UserTokenLoginObtainSerializer,UserLoginSerializer
 
+##### LOGIN #####
+
+class Login(TokenObtainPairView):
+    serializer_class = UserTokenLoginObtainSerializer
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username','')
+        password = request.data.get('password','')
+        user = authenticate(
+            username=username,
+            password=password
+        )
+
+        if user:
+            login_serializer = self.serializer_class(data=request.data)
+            if login_serializer.is_valid():
+                user_serializer = UserLoginSerializer(user)
+                return Response({
+                    'token': login_serializer.validated_data['access'],
+                    'refresh': login_serializer.validated_data['refresh'],
+                    'user': user_serializer.data,
+                    'message': 'Inicio de sesión exitoso.'
+                }, status=status.HTTP_200_OK)
+            return Response({'error':'Usuario o contraseña incorrectos.'},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error':'Usuario o contraseña incorrectos.'},status=status.HTTP_400_BAD_REQUEST)
+
+   
+
+
+
+#### CRUD TRABAJADORES #####
 
 @api_view(['GET'])
 def list_trabajadores(request):

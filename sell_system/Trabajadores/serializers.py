@@ -1,8 +1,18 @@
+from pyexpat import model
 from rest_framework.serializers import ModelSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from django.contrib.auth.models import User
 from Trabajadores.models import Perfil
 
+
+class UserTokenLoginObtainSerializer(TokenObtainPairSerializer):
+    pass
+
+class UserLoginSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id','username','first_name','last_name',]
 
 class UserSerializer(ModelSerializer):
     class Meta:

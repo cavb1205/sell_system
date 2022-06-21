@@ -6,7 +6,7 @@ urlpatterns = [
     
     ###TIENDA###
     path('', views.list_tiendas , name='list_tiendas'),
-    path('<int:pk>/', views.get_tienda, name='detail_tienda'),
+    path('detail/', views.get_tienda, name='detail_tienda'),
     path('create/', views.post_tienda, name='create_tienda'),
     path('<int:pk>/update/', views.put_tienda, name='update_tienda'),
     path('<int:pk>/delete/', views.delete_tienda, name='delete_tienda'),

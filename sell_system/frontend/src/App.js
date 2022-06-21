@@ -1,18 +1,36 @@
 import { Routes, Route } from "react-router-dom";
 
-import { AportesListPage } from './pages/AportesListPage';
+import AuthProvider from "./context/AuthContext";
+
+
+
 import  Header  from './components/Header';
-import AportePage from "./pages/AportePage";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import { AportesListPage } from "./pages/AportesListPage";
+import AporteCreate from "./components/Aportes/AporteCreate";
+import AporteItem from "./components/Aportes/AporteItem";
+import AporteItemUpdate from "./components/Aportes/AporteItemUpdate";
+import AporteItemDelete from "./components/Aportes/AporteItemDelete";
 
 
 function App() {
   return (
     <div className="App">
-      <Header />
-      <Routes>
-        <Route path="/" element={<AportesListPage />} />
-        <Route path="/aporte/:id/" element={<AportePage />} />
-      </Routes>
+      <AuthProvider>
+        <Header />
+        <Routes>
+            <Route path="/login/" element={<LoginPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/aportes/" element={<AportesListPage />}/>
+            <Route path="/aportes/create/" element={<AporteCreate />} />
+            <Route path="/aportes/:aporteId/" element={<AporteItem />} />
+            <Route path="/aportes/:aporteId/update/" element={<AporteItemUpdate />} />
+            <Route path="/aportes/:aporteId/delete/" element={<AporteItemDelete />} />
+           
+            
+        </Routes>
+      </AuthProvider>
     </div>
   );
 }
