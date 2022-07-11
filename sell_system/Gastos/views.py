@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 from .models import *
-from .serializers import GastoSerializer, TipoGastoSerializer
+from .serializers import GastoSerializer, TipoGastoSerializer, GastoUpdateSerializer
 
 
 
@@ -32,6 +32,7 @@ def get_tipo_gasto(request, pk):
 
 @api_view(['PUT'])
 def put_tipo_gasto(request, pk):
+    
     tipo_gasto = Tipo_Gasto.objects.filter(id=pk).first()
     if tipo_gasto:
         tipo_gasto_serializer = TipoGastoSerializer(tipo_gasto, data=request.data)
@@ -46,6 +47,7 @@ def put_tipo_gasto(request, pk):
 def post_tipo_gasto(request):
     '''creamos un tipo_gasto'''
     if request.method == 'POST':
+
         tipo_gasto_serializer = TipoGastoSerializer(data = request.data)
         if tipo_gasto_serializer.is_valid():
             tipo_gasto_serializer.save()
@@ -68,7 +70,8 @@ def delete_tipo_gasto(request, pk):
 @api_view(['GET'])
 def list_gastos(request):
     '''obtenemos todos los gastos'''
-    gastos = Gasto.objects.all()
+    tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
+    gastos = Gasto.objects.filter(tienda=tienda.id)
     if gastos:
         gasto_serializer = GastoSerializer(gastos, many=True)
         return Response(gasto_serializer.data, status=status.HTTP_200_OK)
@@ -88,11 +91,25 @@ def get_gasto(request, pk):
 
 @api_view(['PUT'])
 def put_gasto(request, pk):
+    print('ingresa a editar gasto')
+    tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
     gasto = Gasto.objects.filter(id=pk).first()
+    gasto_valor = gasto.valor
     if gasto:
-        gasto_serializer = GastoSerializer(gasto, data=request.data)
+        print('encuentra el gasto')
+        print(request.data)
+        gasto_serializer = GastoUpdateSerializer(gasto, data=request.data)
+        
         if gasto_serializer.is_valid():
+            print(gasto_valor)
+            print(gasto_serializer.validated_data['valor'])
+            if gasto_valor < gasto_serializer.validated_data['valor']:
+                tienda.caja_inicial = tienda.caja_inicial - (gasto_serializer.validated_data['valor']-gasto_valor)
+            elif gasto_valor > gasto_serializer.validated_data['valor']:
+                tienda.caja_inicial = tienda.caja_inicial + (gasto_valor - gasto_serializer.validated_data['valor'])
             gasto_serializer.save()
+            tienda.save()
+            #tienda.caja_inicial = tienda.caja_inicial
             return Response(gasto_serializer.data,status=status.HTTP_200_OK)
         return Response(gasto_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response({'message':'No se encontró el gasto'}, status=status.HTTP_400_BAD_REQUEST)
@@ -102,17 +119,27 @@ def put_gasto(request, pk):
 def post_gasto(request):
     '''creamos un gasto'''
     if request.method == 'POST':
-        gasto_serializer = GastoSerializer(data = request.data)
+        tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
+        new_data = request.data
+        new_data['tienda']=tienda.id
+        new_data['trabajador']=request.user.perfil.id
+        print(new_data)
+        gasto_serializer = GastoSerializer(data = new_data)
         if gasto_serializer.is_valid():
             gasto_serializer.save()
+            tienda.caja_inicial = tienda.caja_inicial - gasto_serializer.validated_data['valor']
+            tienda.save()
             return Response(gasto_serializer.data, status=status.HTTP_200_OK)
         return Response(gasto_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 @api_view(['DELETE'])
 def delete_gasto(request, pk):
+    tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
     gasto = Gasto.objects.filter(id=pk).first()
     if gasto:
         gasto.delete()
+        tienda.caja_inicial = tienda.caja_inicial + gasto.valor
+        tienda.save()
         return Response({'message':'gasto eliminado correctamente'},status=status.HTTP_200_OK)
     return Response({'message':'No se encontró el gasto'}, status=status.HTTP_400_BAD_REQUEST)

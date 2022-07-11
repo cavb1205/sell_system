@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from Clientes.models import Cliente
+from Tiendas.models import Tienda
 
 from Clientes.serializers import ClienteSerializer, ClienteCreateSerializer
 
@@ -10,7 +11,10 @@ from Clientes.serializers import ClienteSerializer, ClienteCreateSerializer
 @api_view(['GET'])
 def list_clientes(request):
     '''obtenemos todos los clientes'''
-    clientes = Cliente.objects.all()
+    user = request.user
+    tienda = Tienda.objects.filter(id=user.perfil.tienda.id).first()
+    print(tienda)
+    clientes = Cliente.objects.filter(tienda=tienda.id)
     if clientes:
         clientes_serializer = ClienteSerializer(clientes, many=True)
         return Response(clientes_serializer.data, status=status.HTTP_200_OK)
@@ -33,7 +37,10 @@ def get_cliente(request, pk):
 def post_cliente(request):
     '''creamos un cliente'''
     if request.method == 'POST':
-        cliente_serializer = ClienteCreateSerializer(data = request.data)
+        tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
+        new_data = request.data
+        new_data['tienda']=tienda.id
+        cliente_serializer = ClienteCreateSerializer(data = new_data)
         if cliente_serializer.is_valid():
             cliente_serializer.save()
             return Response(cliente_serializer.data, status=status.HTTP_200_OK)

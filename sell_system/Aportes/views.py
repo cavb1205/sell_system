@@ -18,7 +18,7 @@ def list_aportes(request):
     user=request.user
     print(user.perfil.tienda)
     aportes = Aporte.objects.filter(tienda=user.perfil.tienda)
-    #aportes = aportes = Aporte.objects.all()
+    
     if aportes:
         print(aportes)
         aporte_serializer = AporteSerializer(aportes, many=True)

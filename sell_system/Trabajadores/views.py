@@ -11,6 +11,7 @@ from Trabajadores.models import Perfil
 
 from Trabajadores.serializers import UserCreateSerializer, PerfilSerializer, UserSerializer, UserUpdateSerializer
 from Trabajadores.serializers import UserTokenLoginObtainSerializer,UserLoginSerializer
+from Tiendas.models import Tienda
 
 ##### LOGIN #####
 
@@ -46,7 +47,9 @@ class Login(TokenObtainPairView):
 
 @api_view(['GET'])
 def list_trabajadores(request):
-    trabajadores = Perfil.objects.all()
+    tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()
+    
+    trabajadores = Perfil.objects.filter(tienda=tienda.id)
     if trabajadores:
         trabajadores_serializer = PerfilSerializer(trabajadores, many = True)
         return Response(trabajadores_serializer.data, status=status.HTTP_200_OK)
@@ -132,7 +135,7 @@ def post_trabajador(request):
         'identificacion':request.data['identificacion'],
         'telefono':request.data['telefono'],
         'direccion':request.data['direccion'],
-        'tienda':request.data['tienda']
+        'tienda': request.user.perfil.tienda.id
     }
         trabajador_serializer = PerfilSerializer(data = trabajador_data)
         if trabajador_serializer.is_valid():

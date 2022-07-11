@@ -13,4 +13,4 @@ class ClienteSerializer(ModelSerializer):
 class ClienteCreateSerializer(ModelSerializer):
     class Meta:
         model = Cliente
-        exclude = ['fecha_creacion','estado_cliente',]
+        exclude = ['fecha_creacion','estado_cliente']

@@ -11,7 +11,7 @@ from Tiendas.serializers import MonedaSerializer, CiudadSerializer, TiendaSerial
 ### VIEWS FOR TIENDA  ####
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def list_tiendas(request):
     '''obtenemos todas las tiendas'''
 
@@ -25,7 +25,7 @@ def list_tiendas(request):
     
     
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def get_tienda(request):
     print(request.user)
     tienda = Tienda.objects.filter(id=request.user.perfil.tienda.id).first()

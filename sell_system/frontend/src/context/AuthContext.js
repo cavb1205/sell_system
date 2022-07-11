@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
-import {useNavigate} from 'react-router-dom';
+import {Route, useNavigate} from 'react-router-dom';
+import HomePage from "../pages/HomePage";
 
 
 export const AuthContext = createContext();
@@ -12,13 +13,13 @@ const AuthProvider = ({children}) => {
     const [refresh,setRefresh] = useState(localStorage.getItem('refresh') ? JSON.parse(localStorage.getItem('refresh')): null)
     const [user, setUser] = useState(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')): null)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(false)
 
 
     const navigate = useNavigate()
 
     const loginUser = async (e) => {
-        e.preventDefault()
-        console.log('enviando formulario')
+        e.preventDefault();
         const response = await fetch('http://localhost:8000/login/',{
             method:'POST',
             headers:{
@@ -29,22 +30,21 @@ const AuthProvider = ({children}) => {
         })
         const data = await response.json()
         if(response.status === 200){
-            console.log(data)
-            
             setToken(data.token)
             setRefresh(data.refresh)
             setUser(data.user)
             localStorage.setItem('token', JSON.stringify(data.token))
             localStorage.setItem('refresh', JSON.stringify(data.refresh))
             localStorage.setItem('user', JSON.stringify(data.user))
-            navigate("/")
+            navigate("/");
         }else{
-            alert('Algo salio mal...')
+            setError(!error)
         }
     }
 
 
     const logoutUser = () => {
+        setError(false)
         setToken(null)
         setRefresh(null)
         setUser(null)
@@ -55,7 +55,7 @@ const AuthProvider = ({children}) => {
     }
 
     const updateToken = async () => {
-        console.log('ingresa al updatetoken')
+        
         let response = await fetch('http://localhost:8000/token/refresh/',{
             method:'POST',
             headers:{
@@ -76,13 +76,18 @@ const AuthProvider = ({children}) => {
         }
     }
 
-    let contextData = {
+
+
+    
+    const contextData = {
        loginUser:loginUser,
        logoutUser:logoutUser,
        token:token,
        refresh:refresh,
        user:user,
-       navigate:navigate
+       navigate:navigate,
+       error,
+       
     }
 
 
