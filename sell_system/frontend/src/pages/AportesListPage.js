@@ -8,6 +8,8 @@ import AportesListHeader from "../components/Aportes/AportesListHeader";
 import { AportesContext } from "../context/AportesContext";
 import AlertLoading from "../components/Utils/AlertLoading";
 import AlertMessage from "../components/Utils/AlertMessage";
+import AlertError from "../components/Utils/AlertError";
+
 
 
 
@@ -20,11 +22,11 @@ const AportesListPage = () => {
         aporteId,
         totalAportes,
         openModalCreate,
-        setOpenModalCreate,
+        
         openModalUpdate,
-        setOpenModalUpdate,
+        
         openModalDelete,
-        setOpenModalDelete,
+        
         openModalCreateAporte,
         aporteSeleccionado,
         handleChange,
@@ -35,15 +37,17 @@ const AportesListPage = () => {
         aporteDeleteItem,
         openModalDeleteAporte,
         loading,
+        serverError,
+        message
     } = useContext(AportesContext);
 
     return (
         <Container>
-            {loading? <AlertLoading />:<>
+            {loading? <AlertLoading />:serverError?<AlertError message={'No se pudo cargar la información, por favor actualiza la ventana.'} />:<>
             <AportesListHeader totalAportes={totalAportes} aportes={aportes} />
 
             <div className="m-3">
-                <Button onClick={openModalCreateAporte} color="success">Crear Aporte</Button>
+                <button onClick={openModalCreateAporte} type="button" className="btn btn-success">Crear Aporte</button>
             </div>
             <div>
                 {aportes.message? <AlertMessage message={aportes.message}/>:
@@ -84,6 +88,7 @@ const AportesListPage = () => {
             <Modal isOpen={openModalCreate}>
                 <ModalHeader>
                     Crear Aporte
+                    {message && <AlertError message={'Por favor completar los campos del formulario.'} />}
                 </ModalHeader>
                 <ModalBody>
                     <Container>
@@ -114,6 +119,7 @@ const AportesListPage = () => {
             <Modal isOpen={openModalUpdate}>
                 <ModalHeader>
                     Editar Aporte
+                    {serverError && <AlertError message={'Error al enviar la información, intente de nuevo.'}/>}
                 </ModalHeader>
                 <ModalBody>
                     <Container>
@@ -148,6 +154,7 @@ const AportesListPage = () => {
             <Modal isOpen={openModalDelete}>
                 <ModalHeader>
                     Aliminar Aporte {aporteId.id}
+                    {serverError && <AlertError message={'Error al eliminar la información, intente de nuevo.'}/>}
                 </ModalHeader>
                 <ModalBody>
                     Esta seguro que desea eliminar el aporte {aporteId.valor}?

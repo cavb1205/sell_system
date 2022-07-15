@@ -4,9 +4,11 @@ import HomePageHeader from '../components/HomePage/HomePageHeader'
 import HomePageTiendaCaja from '../components/HomePage/HomePageTiendaCaja'
 import HomePageTiendaCardItem from '../components/HomePage/HomePageTiendaCardItem'
 import HomePageTiendaGraphip from '../components/HomePage/HomePageTiendaGraphip'
+import HomePageTiendaInfo from '../components/HomePage/HomePageTiendaInfo'
 import AlertLoading from '../components/Utils/AlertLoading'
 
 import { AportesContext } from '../context/AportesContext'
+import { GastosContext } from '../context/GastosContext'
 
 
 import { TiendaContext } from '../context/TiendaContext'
@@ -18,11 +20,8 @@ const HomePage = () => {
     loading,
   }=useContext(TiendaContext)
 
-  const {
-    totalAportes,
-   
-  } = useContext(AportesContext)
-
+  const {totalAportes} = useContext(AportesContext)
+  const {totalGastos} = useContext(GastosContext)
   
   return (
       
@@ -47,7 +46,7 @@ const HomePage = () => {
                   <HomePageTiendaCardItem tipo={"Inversión"} tienda={tienda} total={totalAportes()}/>
                 </div>
                 <div className='col-md-4 col-xxl-4'>
-                  <HomePageTiendaCardItem tipo={"Gastos"} tienda={tienda} total={0}/>
+                  <HomePageTiendaCardItem tipo={"Gastos"} tienda={tienda} total={totalGastos()}/>
                 </div>
                 <div className='col-md-4 col-xxl-4'>
                   <HomePageTiendaCardItem tipo={"Utilidades"} tienda={tienda} total={0}/>

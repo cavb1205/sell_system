@@ -1,14 +1,21 @@
 import React,{Children, createContext,useContext,useEffect,useState} from 'react'
 import { AuthContext } from './AuthContext';
+import {URL} from '../config';
 
 const GastosProvider = ({children}) => {
-
+    
+    
     let {token,logoutUser, navigate} = useContext(AuthContext)
     const [tipoGastos,setTipoGastos] = useState([])
-    
+
     
     const [gastos, setGastos]= useState([])
-    const [gasto, setGasto] = useState({})
+    const [gasto, setGasto] = useState({
+        "fecha":'',
+        "tipo_gasto":1,
+        "valor":'',
+        "comentario":'',
+    })
     const [newGasto, setNewGasto]=useState({
         "fecha":new Date().toISOString().slice(0, 10),
         "tipo_gasto":1,
@@ -16,9 +23,9 @@ const GastosProvider = ({children}) => {
         "comentario":'',
     })
 
-   
-    
-    const [errorMessage, setErrorMessage] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(false)
+    const [errorMessage, setErrorMessage] = useState(false)
 
     const [openModalCreate, setOpenModalCreate] = useState(false)
     const [openModalDetail, setOpenModalDetail] = useState(false)
@@ -42,25 +49,30 @@ const GastosProvider = ({children}) => {
     
 
     const getGastos = async () => {
-        
-        let response = await fetch('http://localhost:8000/gastos/',{
-            method:'GET',
-            headers:{
-                'Content-Type':'application/json',
-                'Authorization':`Bearer ${token}`
-            },
-        })
-        let data = await response.json();
-        if(response.status===200){
-            
-            setGastos(data);
-        }else if(response.statusText == 'Unauthorized'){
-            logoutUser()
+        try {
+
+            let response = await fetch(`${URL}/gastos/`,{
+                method:'GET',
+                headers:{
+                    'Content-Type':'application/json',
+                    'Authorization':`Bearer ${token}`
+                },
+            })
+            let data = await response.json();
+            if(response.status===200){
+                setGastos(data);
+                setLoading(false)
+            }else if(response.statusText == 'Unauthorized'){
+                logoutUser()
+            }
+        } catch {
+            setLoading(false)
+            setError(true)
         }
     }
 
     const getTipoGastos = async () => {
-        let response = await fetch('http://localhost:8000/gastos/tipo/',{
+        let response = await fetch(`${URL}/gastos/tipo/`,{
             method:'GET',
             headers:{
                 'Content-Type':'application/json',
@@ -75,30 +87,39 @@ const GastosProvider = ({children}) => {
         }
     }
     const gastoCreateItem = async (event)=>{
-        const response = await fetch('http://localhost:8000/gastos/create/',{
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json',
-                'Authorization':`Bearer ${token}`,
-            },
-            body: JSON.stringify(newGasto)
-            
-        })
-        const data = await response.json()
-        if (response.status === 200){
-            console.log('status ok enviado con exito codigo 200')
-            setOpenModalCreate(!openModalCreate)
-            navigate('/gastos/')
-            getGastos()
-        }else if(response.statusText == 'Unauthorized'){
-            logoutUser()
-        }else{
-            setErrorMessage('Por favor completar todos los campos en el formulario')
+        try {
+            if (newGasto.valor){
+                setErrorMessage(false)
+                const response = await fetch(`${URL}/gastos/create/`,{
+                    method:'POST',
+                    headers:{
+                        'Content-Type':'application/json',
+                        'Authorization':`Bearer ${token}`,
+                    },
+                    body: JSON.stringify(newGasto)
+                    
+                })
+                const data = await response.json()
+                if (response.status === 200){
+                    
+                    setOpenModalCreate(!openModalCreate)
+                    navigate('/gastos/')
+                    getGastos()
+                }else if(response.statusText == 'Unauthorized'){
+                    logoutUser()
+                }
+            } else {
+                setErrorMessage(true)
+            }
+        } catch {
+            setError(true)
         }
     }
+
+    
     const gastoUpdateItem = async (event) => {
         
-        const response = await fetch(`http://localhost:8000/gastos/${gasto.id}/update/`,{
+        const response = await fetch(`${URL}/gastos/${gasto.id}/update/`,{
             method:'PUT',
             headers:{
                 'Content-Type':'application/json',
@@ -109,7 +130,7 @@ const GastosProvider = ({children}) => {
         })
         
         if (response.status === 200){
-            console.log('status ok enviado con exito codigo 200')
+            
             setOpenModalUpdate(!openModalUpdate)
             navigate(`/gastos/`)
             getGastos()
@@ -121,7 +142,7 @@ const GastosProvider = ({children}) => {
         }
     }
     const gastoDeleteItem = async () => {
-        let response = await fetch(`/gastos/${gasto.id}/delete/`,{
+        let response = await fetch(`${URL}/gastos/${gasto.id}/delete/`,{
           method:'DELETE',
           headers:{
             'Content-Type':'application/json',
@@ -148,6 +169,7 @@ const GastosProvider = ({children}) => {
     }
     const openModalUpdateGasto = ()=>{
         setOpenModalUpdate(!openModalUpdate);
+
     }
     
     const openModalDeleteGasto = ()=>{
@@ -156,7 +178,7 @@ const GastosProvider = ({children}) => {
     
     const gastoSelected = (gasto,option) => {
          setGasto(gasto);
-         console.log(option);
+         
          if(option=='Detalle'){
              setOpenModalDetail(!openModalDetail);
          }else if(option=='Editar'){
@@ -172,6 +194,8 @@ const GastosProvider = ({children}) => {
             [name]:value
         })
     }
+    
+    
     const handleChangeUpdate = (event)=>{
         const {name,value} = event.target
         setGasto({
@@ -202,7 +226,8 @@ const GastosProvider = ({children}) => {
         tipoGastos,
         openModalDelete,
         totalGastos,
-
+        loading,
+        error,
     }
 
   return (

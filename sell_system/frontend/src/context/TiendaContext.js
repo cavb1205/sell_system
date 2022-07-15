@@ -1,10 +1,12 @@
 import React,{createContext,useContext,useState,useEffect} from 'react'
 import { AportesContext } from './AportesContext'
 import { AuthContext } from './AuthContext'
+import { GastosContext } from './GastosContext'
 
 const TiendaProvider = ({children}) => {
     let {user,token,logoutUser} = useContext(AuthContext) 
     const {aportes} = useContext(AportesContext)
+    const {gastos} = useContext(GastosContext)
     
     const [tienda, setTienda] = useState([])
     const [loading, setLoading] = useState(true)
@@ -20,7 +22,7 @@ const TiendaProvider = ({children}) => {
 
     useEffect(()=>{
         getTienda();
-    },[aportes])
+    },[aportes,gastos])
  
   const getTienda = async () => {
     let response = await fetch('http://localhost:8000/tiendas/detail/',{

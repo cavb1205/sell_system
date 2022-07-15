@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useContext } from "react";
 
-import {Alert,Table,Button,Modal,ModalBody,ModalFooter,Container, ModalHeader, FormGroup, Label, Input} from 'reactstrap';
+import {Table,Button,Modal,ModalBody,ModalFooter,Container, ModalHeader, FormGroup, Label, Input} from 'reactstrap';
 import { FaEdit,FaTrashAlt,FaSearch,FaPlusCircle } from "react-icons/fa";
 import { GastosContext } from "../context/GastosContext";
 import GastosListHeader from "../components/Gastos/GastosListHeader";
 import AlertMessage from "../components/Utils/AlertMessage";
+import AlertError from "../components/Utils/AlertError";
+import AlertLoading from "../components/Utils/AlertLoading";
 
 
 
@@ -32,12 +34,18 @@ const GastosListPage = () => {
         openModalUpdate,
         openModalDelete,
         totalGastos,
+        loading,
+        error,
     } = useContext(GastosContext)
   return (
     <Container>
+            {loading? <AlertLoading/>
+            :
+            error? <AlertError message={'Error al cargar la información, vuelva a intentar.'} /> :
+            <>
             <GastosListHeader gastos={gastos} totalGastos={totalGastos} />
             <div className="m-3">
-                <Button onClick={openModalCreateGasto} color="success">Crear Gasto</Button>
+                <button onClick={openModalCreateGasto} className="btn btn-success">Crear Gasto</button>
             </div>
             {gastos.message? <AlertMessage message={gastos.message} />:
                 <Table responsive>
@@ -56,7 +64,10 @@ const GastosListPage = () => {
                                     <th scope="row">{gasto.id}</th>
                                     <td>{gasto.fecha}</td>
                                     <td>{gasto.valor}</td>
-                                    <td>{gasto.tipo_gasto.tipo_gasto}</td>
+                                    {tipoGastos.map((tipo)=>(
+                                        (gasto.tipo_gasto===tipo.id)?<td key={tipo.id}>{tipo.tipo_gasto}</td>:null
+                                    ))}
+                                    
                                     <td>{gasto.trabajador}</td>
                                     <td>
                                         <Button onClick={()=>gastoSelected(gasto,'Detalle')} size='sm' color='secondary'><FaSearch/></Button>{" "}
@@ -68,7 +79,8 @@ const GastosListPage = () => {
                             )}
                     </tbody>
                 </Table>
-            
+                }
+                </>
             }
 
             <Modal isOpen={openModalDetail}>
@@ -77,7 +89,10 @@ const GastosListPage = () => {
                 </ModalHeader>
                 <ModalBody>
                    <p>Fecha: {gasto.fecha}</p>
-                   {gasto.tipo_gasto?<p>Tipo de gasto: {gasto.tipo_gasto.tipo_gasto} </p>:<p>Tipo de gasto: N/A</p>}
+                   <p>Tipo de gasto: {tipoGastos.map((tipo)=>(
+                                        (gasto.tipo_gasto===tipo.id)?<span key={tipo.id}>  {tipo.tipo_gasto}</span>:null
+                                    ))} 
+                    </p>
                    <p>Valor: {gasto.valor}</p>
                    <p>Comentario: {gasto.comentario}</p>
                    <p>Trabajador: {gasto.trabajador}</p>
@@ -91,7 +106,8 @@ const GastosListPage = () => {
 
             <Modal isOpen={openModalCreate}>
                 <ModalHeader>
-                    {errorMessage?<div className="alert alert-danger" role="alert">{errorMessage}</div>:<>Crear Gasto</>}
+                    Crear Gasto
+                    {errorMessage && <AlertError message={'Por favor completar los campos del formulario.'} />}
                 </ModalHeader>
                 <ModalBody>
                     <Container>
@@ -138,7 +154,7 @@ const GastosListPage = () => {
                         <FormGroup>
                             <Label for="floatingInput">Tipo de Gasto</Label>
                             
-                            <Input onChange={handleChangeUpdate} value={gasto.tipo_gasto && gasto.tipo_gasto.id}  name='tipo_gasto' type="select" className="form-control" id="floatingInput">
+                            <Input onChange={handleChangeUpdate} value={gasto.tipo_gasto}  name='tipo_gasto' type="select" className="form-control" id="floatingInput">
                                 {tipoGastos.map((tipo)=>(
                                     <option key={tipo.id} value={tipo.id}>{tipo.tipo_gasto}</option>
                                 ))}

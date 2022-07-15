@@ -80,7 +80,7 @@ def post_aporte(request):
             tienda.caja_inicial = tienda.caja_inicial + aporte_serializer.validated_data['valor']
             tienda.save()
             return Response(aporte_serializer.data, status=status.HTTP_200_OK)
-        return Response(aporte_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message':'Por favor completar los campos del formulario.'}, status=status.HTTP_400_BAD_REQUEST)
     
 
 @api_view(['DELETE'])

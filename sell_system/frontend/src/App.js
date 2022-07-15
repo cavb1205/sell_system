@@ -18,6 +18,7 @@ import TrabajadorDetail from "./components/TrabajadorDetail";
 import ClienteDetailItem from "./components/Clientes/ClienteDetailItem";
 import TiendaProvider from "./context/TiendaContext";
 import GastosProvider from "./context/GastosContext";
+import NotFound from "./pages/NotFound";
 
 
 
@@ -38,6 +39,7 @@ function App() {
             <Route path="/clientes/:clienteId/" element={<ClientesProvider><ClienteDetailItem /></ClientesProvider>}/>
             <Route path="/trabajadores/" element={<TrabajadoresListPage />}/>
             <Route path="/trabajadores/:trabajadorId/" element={<TrabajadorDetail />}/>
+            <Route path="/not/" element={<NotFound />}/>
         </Routes>
         </TiendaProvider>
           </GastosProvider>

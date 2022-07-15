@@ -1,6 +1,6 @@
 import React,{createContext,useContext, useState, useEffect} from 'react';
 import { AuthContext } from './AuthContext';
-
+import { URL } from '../config';
 
 export const AportesContext = createContext();
 
@@ -11,6 +11,8 @@ const AportesProvider = ({children}) => {
     
     
     const [loading,setLoading] = useState(true)
+    const [serverError, setServerError] = useState(false)
+    const [message, setMessage] = useState(false)
 
     const [aportes, setAportes] = useState([])
     const [newAporte, setNewAporte] = useState({
@@ -36,6 +38,7 @@ const AportesProvider = ({children}) => {
     
     useEffect(() => {
         getAportes();
+        console.log('efecto aportes')
     },[])
     
     //calculamos la suma de los aportes
@@ -48,7 +51,8 @@ const AportesProvider = ({children}) => {
     }
 
     const getAportes = async () => {
-        let response = await fetch('http://localhost:8000/aportes/',{
+        try {
+            let response = await fetch(`${URL}/aportes/`,{
             method:'GET',
             headers:{
                 'Content-Type':'application/json',
@@ -65,74 +69,111 @@ const AportesProvider = ({children}) => {
         }else if(response.statusText == 'Unauthorized'){
             logoutUser()
         }
+        } catch {
+            setServerError(true);
+            setLoading(!loading);
+        }
+         
+            
+        
     }
     
+    
     const aporteCreateItem = async (event)=>{
-        event.preventDefault()
-        const response = await fetch('http://localhost:8000/aportes/create/',{
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json',
-                'Authorization':`Bearer ${token}`,
-            },
-            body: JSON.stringify(newAporte)
+        try {
+            event.preventDefault()
+            const response = await fetch(`${URL}/aportes/create/`,{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json',
+                    'Authorization':`Bearer ${token}`,
+                },
+                body: JSON.stringify(newAporte)
+                
+            })
+            const data = await response.json()
             
-        })
-        const data = await response.json()
-        if (response.status === 200){
-            setOpenModalCreate(!openModalCreate)
-            navigate('/aportes/')
-            getAportes();
-        }else if(response.statusText == 'Unauthorized'){
-            logoutUser()
-        }else{
-            alert('Informacion erronea en el formulario')
+            if (response.status === 200){
+                setOpenModalCreate(!openModalCreate)
+                setMessage(false)
+                navigate('/aportes/')
+                setNewAporte({
+                    "fecha":new Date().toISOString().slice(0, 10),
+                    'valor':'',
+                    'comentario':'',
+                    'trabajador':''
+                })
+                getAportes();
+            
+            }else if(response.status === 400){
+                setMessage(!message)
+            }
+            else if(response.statusText == 'Unauthorized'){
+                logoutUser()
+            }
+        } catch {
+            setServerError(true);
+            setNewAporte({
+                "fecha":new Date().toISOString().slice(0, 10),
+                'valor':'',
+                'comentario':'',
+                'trabajador':''
+            })
         }
     }
-    const aporteUpdateItem = async (event) => {
-        event.preventDefault()
-        const response = await fetch(`/aportes/${aporteId.id}/update/`,{
-            method:'PUT',
-            headers:{
-                'Content-Type':'application/json',
-                'Authorization':`Bearer ${token}`,
-            },
-            body: JSON.stringify(aporteId)
-            
-        })
-        const data = await response.json()
-        if (response.status === 200){
-            setOpenModalUpdate(!setOpenModalUpdate)
-            navigate(`/aportes/`)
-            getAportes()
 
-        }else if(response.statusText == 'Unauthorized'){
-            logoutUser()
-        }else{
-            alert('Informacion erronea en el formulario')
+    const aporteUpdateItem = async (event) => {
+        try {
+            event.preventDefault()
+            const response = await fetch(`${URL}/aportes/${aporteId.id}/update/`,{
+                method:'PUT',
+                headers:{
+                    'Content-Type':'application/json',
+                    'Authorization':`Bearer ${token}`,
+                },
+                body: JSON.stringify(aporteId)
+                
+            })
+            const data = await response.json()
+            if (response.status === 200){
+                setOpenModalUpdate(!setOpenModalUpdate)
+                navigate(`/aportes/`)
+                getAportes()
+    
+            }else if(response.statusText == 'Unauthorized'){
+                logoutUser()
+            }
+        } catch{
+            setServerError(true)
         }
     }
     const aporteDeleteItem = async () => {
-        let response = await fetch(`/aportes/${aporteId.id}/delete/`,{
-          method:'DELETE',
-          headers:{
-            'Content-Type':'application/json',
-            'Authorization':`Bearer ${token}`
-          },
-        })
-        let data = await response.json();
-        if (response.status === 200){
-            setOpenModalDelete(!openModalDelete)
-            navigate('/aportes/')
-            getAportes()
-    
-        }else if(response.statusText == 'Unauthorized'){
-          logoutUser()
+        try {
+            let response = await fetch(`${URL}/aportes/${aporteId.id}/delete/`,{
+              method:'DELETE',
+              headers:{
+                'Content-Type':'application/json',
+                'Authorization':`Bearer ${token}`
+              },
+            })
+            let data = await response.json();
+            if (response.status === 200){
+                setOpenModalDelete(!openModalDelete)
+                navigate('/aportes/')
+                getAportes()
+        
+            }else if(response.statusText == 'Unauthorized'){
+              logoutUser()
+            }
+
+        } catch {
+            setServerError(true)
         }
       }
     
     const openModalCreateAporte = ()=>{
         setOpenModalCreate(!openModalCreate)
+        setMessage(false);
     }
     const openModalUpdateAporte = ()=>{
         setOpenModalUpdate(!openModalUpdate)
@@ -185,6 +226,8 @@ const AportesProvider = ({children}) => {
         aporteDeleteItem,
         openModalDeleteAporte,
         loading,
+        serverError,
+        message
         
     }
     

@@ -21,10 +21,11 @@ class GastoSerializer(ModelSerializer):
             "fecha":instance.fecha,
             "valor":instance.valor,
             "comentario":instance.comentario,
-            "tipo_gasto":{
-                'id':instance.tipo_gasto.id,
-                'tipo_gasto':instance.tipo_gasto.tipo_gasto,
-            },
+            "tipo_gasto":instance.tipo_gasto.id,
+            # {
+            #     'id':instance.tipo_gasto.id,
+            #     'tipo_gasto':instance.tipo_gasto.tipo_gasto,
+            # },
             "trabajador":instance.trabajador.trabajador.first_name,
             "tienda":instance.tienda.id,
 
